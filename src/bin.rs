@@ -9,18 +9,20 @@ use env_logger::Builder;
 use log::Level;
 
 fn main() {
-    let darklua = Darklua::parse();
-
-    let filter = darklua.get_log_level_filter();
-
-    formatted_logger().filter_module("darklua", filter).init();
-
-    match darklua.run() {
-        Ok(()) => {}
-        Err(err) => {
-            process::exit(err.exit_code());
+    std::thread::Builder::new().stack_size(16*1024*1024).spawn(||{
+        let darklua = Darklua::parse();
+    
+        let filter = darklua.get_log_level_filter();
+    
+        formatted_logger().filter_module("darklua", filter).init();
+    
+        match darklua.run() {
+            Ok(()) => {}
+            Err(err) => {
+                process::exit(err.exit_code());
+            }
         }
-    }
+    }).unwrap().join().unwrap();
 }
 
 fn formatted_logger() -> Builder {
